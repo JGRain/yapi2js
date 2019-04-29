@@ -345,6 +345,8 @@ export interface IOutPut {
   /** 接口ID */
   id: number,
   /**  */
+  reqInterfaceName: string,
+  resInterfaceName: string,
   requestInterface: string,
   responseInterface: string,
 }
