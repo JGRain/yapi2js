@@ -27,7 +27,7 @@
     "build": "yarn buildCli && yarn buildClient",
     "buildCli": "tsc",
     "buildClient": "bili",
-    "release": "yarn lint && yarn testOnly && standard-version -a && yarn build && git push --follow-tags origin master && npm publish"
+    "release": "yarn lint && yarn build && npm publish"
   },
   "eslintConfig": {
     "root": true,

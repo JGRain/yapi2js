@@ -1,10 +1,8 @@
 *.log
 node_modules
-lib
 .DS_Store
 coverage
 
 /api
 .tmp*
 *_cache
-/client
