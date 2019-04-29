@@ -10,7 +10,6 @@ import * as Types from './../types'
 
 import { getNormalizedRelativePath, jsonSchemaStringToJsonSchema, jsonSchemaToType, jsonToJsonSchema, mockjsTemplateToJsonSchema, propDefinitionsToJsonSchema, throwError, resolveApp, writeFile, mkdirs } from './../utils'
 
-
 export class Generator {
 
   config: Types.ServerConfig
@@ -115,14 +114,22 @@ export class Generator {
     const filesDesc = await Promise.all(res.map(async catItem => {
       const {list, ...rest} = catItem
       const newList = await Promise.all(list.map(async (apiItem) => {
-        const requestInterface = await this.generateRequestDataType(apiItem, 'IReq')
+        const name = this.generateApiName({
+          path: apiItem.path,
+          _id: apiItem._id,
+        })
+        const reqInterfaceName = `IReq${name}`
+        const resInterfaceName = `IRes${name}`
+        const requestInterface = await this.generateRequestDataType(apiItem, reqInterfaceName)
         const responseInterface = await this.generateResponseDataType({
           interfaceInfo: apiItem,
-          typeName: 'IResponse',
+          typeName: resInterfaceName,
           dataKey: this.config.projectId,
         })
         return {
+          reqInterfaceName,
           requestInterface,
+          resInterfaceName,
           responseInterface,
           ...apiItem
         }
@@ -136,10 +143,11 @@ export class Generator {
     const arr: Types.IOutPut[] = []
     filesDesc.forEach(files => {
       files.list.forEach(file => {
-        const reg = new RegExp( '/' , "g" )
-        let name = file.path.replace(reg, ' ').trim()
-        name = changeCase.pascalCase(name.trim())
-        name += file._id
+        const { path, _id } = file
+        const name = this.generateApiName({
+          path,
+          _id
+        })
         // pascalCase
         const item = {
           id: file._id,
@@ -149,6 +157,8 @@ export class Generator {
           method: file.method,
           title: file.title,
           markdown: file.markdown || '',
+          reqInterfaceName: file.reqInterfaceName,
+          resInterfaceName: file.resInterfaceName,
           requestInterface: file.requestInterface,
           responseInterface: file.responseInterface,
         }
@@ -222,6 +232,21 @@ ${importStr}
 
 ${exportStr}
     `
+  }
+
+  /** 生成api name规则 */
+  generateApiName({
+    path,
+    _id
+  }: {
+    path: string,
+    _id: string | number
+  }): string {
+    const reg = new RegExp( '/' , "g" )
+    let name = path.replace(reg, ' ').trim()
+    name = changeCase.pascalCase(name.trim())
+    name += _id
+    return name
   }
 
 }

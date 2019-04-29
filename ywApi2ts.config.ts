@@ -16,7 +16,7 @@ export default {
       api.requestInterface,
       api.responseInterface,
       `
-      export default (data: IReq) => request({
+      export default (data: ${api.reqInterfaceName}): ${api.resInterfaceName} => request({
         method: '${api.method}',
         url: '${api.path}',
         data: data
