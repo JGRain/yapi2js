@@ -1,22 +1,14 @@
 {
   "name": "yapi-2-ts",
-  "version": "1.3.1",
-  "description": "根据 YApi 的接口定义生成 TypeScript 的接口类型及其请求函数代码。",
+  "version": "0.0.1",
+  "description": "yapi 输出到前端项目中api ts & js",
   "main": "client/index.js",
   "module": "client/index.mjs",
   "typing": "client/index.d.ts",
   "bin": {
     "ytt": "lib/cli.js"
   },
-  "homepage": "https://github.com/fjc0k/yapi-to-typescript",
   "license": "MIT",
-  "repository": {
-    "type": "git",
-    "url": "git@github.com:fjc0k/yapi-to-typescript.git"
-  },
-  "bugs": {
-    "url": "https://github.com/fjc0k/yapi-to-typescript/issues"
-  },
   "keywords": [
     "yapi",
     "typescript",
@@ -26,11 +18,6 @@
     "lib",
     "client"
   ],
-  "author": {
-    "name": "Jay Fong",
-    "email": "fjc0kb@gmail.com",
-    "url": "https://github.com/fjc0k"
-  },
   "scripts": {
     "lint": "eslint --fix --ext .ts src/",
     "testApi": "ts-node --transpile-only src/cli.ts",
@@ -39,7 +26,6 @@
     "build": "yarn buildCli && yarn buildClient",
     "buildCli": "tsc",
     "buildClient": "bili",
-    "generate": "",
     "release": "yarn lint && yarn testOnly && standard-version -a && yarn build && git push --follow-tags origin master && npm publish"
   },
   "eslintConfig": {

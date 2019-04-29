@@ -252,6 +252,11 @@ export interface ServerConfig {
    * @example 'src/api/index.ts'
    */
   outputFilePath: string,
+  /**
+   * 自定义代码片段函数
+   * 不配置的话会有默认代码片段
+   */
+  generateApiFileCode?: (api: IOutPut) => string,
 }
 
 export type Config = ServerConfig | ServerConfig[]
@@ -324,3 +329,22 @@ export interface ApiJsonItem {
 }
 
 export type ApiJson = ApiJsonItem[]
+
+export interface IOutPut {
+  /** 生成api 文件名称 */
+  name: string,
+  /** 接口url */
+  path: string,
+  method: Method,
+  /** 接口名 */
+  title: string,
+  /** 接口备注 */
+  markdown: string,
+  /** 分类菜单id */
+  catid: number,
+  /** 接口ID */
+  id: number,
+  /**  */
+  requestInterface: string,
+  responseInterface: string,
+}
