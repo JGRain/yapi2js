@@ -7,6 +7,7 @@ import { compile, Options } from 'json-schema-to-typescript'
 import { FileData } from './helpers'
 import { JSONSchema4 } from 'json-schema'
 import { PropDefinitions } from './types'
+import consola from 'consola'
 
 /**
  * 抛出错误。
@@ -200,10 +201,13 @@ export const mkdirs = (dirpath: string, callback: () => any) => {
 export const writeFile = (dirpath: string, data: string, callback?: () => void) => {
   fs.writeFile(dirpath, data, function(err) {
     if (err) {
-      console.log(`${dirpath}文件写入失败`)
+      return consola.error(`文件写入失败: ${dirpath}`)
     } else {
-      console.log(`${dirpath}文件写入成功`)
-      callback && callback()
+      if (callback) {
+        return callback()
+      } else {
+        return consola.success(`文件写入成功: ${dirpath}`)
+      }
     }
   })
 }

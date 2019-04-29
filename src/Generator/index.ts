@@ -127,7 +127,6 @@ export class Generator {
           ...apiItem
         }
       }))
-      console.log(newList)
       return {
         ...rest,
         list: newList,
@@ -137,10 +136,10 @@ export class Generator {
     const arr: IOutPut[] = []
     filesDesc.forEach(files => {
       files.list.forEach(file => {
-        console.log(file.path)
         const reg = new RegExp( '/' , "g" )
         let name = file.path.replace(reg, ' ').trim()
         name = changeCase.pascalCase(name.trim())
+        name += file._id
         // pascalCase
         const item = {
           id: file._id,
@@ -164,30 +163,62 @@ export class Generator {
     // 生成api文件夹
     mkdirs(this.config.outputFilePath, () => {
       outputs.forEach(api => {
-        const data = [
-          `
-/**
- * ${api.title}
- * ${api.markdown || ''}
- **/
-          `,
-          api.requestInterface,
-          api.responseInterface,
-          `
-export default (data: IReq) => request({
-  method: '${api.method}',
-  url: '${api.path}',
-  data: data
-})
-          `
-        ]
+        const data = this.generateItemFileCode(api)
         writeFile(
           resolveApp(`${this.config.outputFilePath}/${api.name}.ts`),
-          data.join(`
-          `)
+          data
         )
       })
     })
+    const AllApi: string[] = outputs.map(output => output.name)
+    const indexData = this.generateIndexCode(AllApi)
+    mkdirs(this.config.outputFilePath, () => {
+      writeFile(
+        resolveApp(`${this.config.outputFilePath}/index.ts`),
+        indexData
+      )
+    })
+  }
+
+
+  generateItemFileCode(api: IOutPut): string {
+    const data = [
+      `
+/**
+* ${api.title}
+* ${api.markdown || ''}
+**/
+      `,
+      api.requestInterface,
+      api.responseInterface,
+      `
+export default (data: IReq) => request({
+method: '${api.method}',
+url: '${api.path}',
+data: data
+})
+      `
+    ]
+    return data.join(`
+    `)
+  }
+
+  generateIndexCode(apis: string[]): string {
+    const arr = apis.map(api => (`import ${api} from './${api}'`))
+    const importStr = arr.join(`
+    `)
+    const exportStr = `
+export default {
+  ${apis.join(`,
+  `)}
+}
+    `
+
+    return `
+${importStr}
+
+${exportStr}
+    `
   }
 
 }
