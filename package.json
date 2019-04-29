@@ -1,10 +1,11 @@
 {
   "name": "ywapi2ts",
-  "version": "0.0.1",
+  "version": "1.0.0",
   "description": "yapi 输出到前端项目中api ts & js",
   "main": "client/index.js",
   "module": "client/index.mjs",
   "typing": "client/index.d.ts",
+  "author": "venus_jin",
   "bin": {
     "ywapi2ts": "lib/cli.js"
   },
