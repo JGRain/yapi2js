@@ -1,15 +1,16 @@
 {
-  "name": "yapi-2-ts",
+  "name": "ywapi2ts",
   "version": "0.0.1",
   "description": "yapi 输出到前端项目中api ts & js",
   "main": "client/index.js",
   "module": "client/index.mjs",
   "typing": "client/index.d.ts",
   "bin": {
-    "ytt": "lib/cli.js"
+    "ywapi2ts": "lib/cli.js"
   },
   "license": "MIT",
   "keywords": [
+    "ywapi2ts",
     "yapi",
     "typescript",
     "typing"
