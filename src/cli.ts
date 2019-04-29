@@ -6,8 +6,8 @@ import fs from 'fs-extra'
 import ora from 'ora'
 import path from 'path'
 import prompt from 'prompts'
-import { Config } from './types'
-import { Generator } from './Generator'
+import { Config, ServerConfig } from './types'
+import { Generator } from './Generator/index'
 
 TSNode.register({
   transpileOnly: true,
@@ -90,14 +90,13 @@ TSNode.register({
           }
           consola.success(`找到配置文件: ${configFile}`)
           try {
-            const config: Config = require(configFile).default
+            const config: ServerConfig = require(configFile).default
             const generator = new Generator(config)
 
             const spinner = ora('正在获取数据并生成代码...').start()
             const output = await generator.generate()
             spinner.stop()
             consola.success('获取数据并生成代码完毕')
-
             await generator.write(output)
             consola.success('写入文件完毕')
           } catch (err) {

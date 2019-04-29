@@ -1,6 +1,7 @@
+import fs from 'fs'
+import path from 'path'
 import jsonSchemaGenerator from 'json-schema-generator'
 import Mock from 'mockjs'
-import path from 'path'
 import { castArray, forOwn, isArray, isEmpty, isObject } from 'vtils'
 import { compile, Options } from 'json-schema-to-typescript'
 import { FileData } from './helpers'
@@ -176,4 +177,33 @@ export async function jsonSchemaToType(jsonSchema: JSONSchema4, typeName: string
   }
   const code = await compile(jsonSchema, typeName, JSTTOptions)
   return code.trim()
+}
+
+
+const appDirectory = fs.realpathSync(process.cwd());
+export const resolveApp = (relativePath: string) => path.resolve(appDirectory, relativePath)
+
+export const mkdirs = (dirpath: string, callback: () => any) => {
+  fs.exists(dirpath, exists => {
+    if (exists) {
+      callback()
+    } else {
+      //尝试创建父目录，然后再创建当前目录
+      mkdirs(path.dirname(dirpath), () => {
+        fs.mkdir(dirpath, callback)
+      })
+    }
+  })
+}
+
+
+export const writeFile = (dirpath: string, data: string, callback?: () => void) => {
+  fs.writeFile(dirpath, data, function(err) {
+    if (err) {
+      console.log(`${dirpath}文件写入失败`)
+    } else {
+      console.log(`${dirpath}文件写入成功`)
+      callback && callback()
+    }
+  })
 }

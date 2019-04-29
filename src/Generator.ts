@@ -276,7 +276,13 @@ export class Generator {
   }
 
   static async fetchApi<T = any>(url: string, query: Record<string, string>): Promise<T> {
-    const res = await request.get(url, { qs: query, json: true })
+    const res = await request.get(url, {
+      qs: query,
+      json: true,
+      headers: {
+        'Cookie': '_yapi_token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1aWQiOjE4LCJpYXQiOjE1NTU5MDA5ODQsImV4cCI6MTU1NjUwNTc4NH0.ZUJfgv1-OY6iZI6ok_vyHBBcM8Eh3TialJqZhSmfuz0; _yapi_uid=18',
+      }
+    })
     if (res && res.errcode) {
       throwError(res.errmsg)
     }
@@ -287,6 +293,8 @@ export class Generator {
   async fetchInterfaceList({ serverUrl, token, id }: SyntheticalConfig): Promise<InterfaceList> {
     const projectId: string = `${serverUrl}|${token}`
 
+    console.log(projectId)
+
     if (!(projectId in this.projectIdToCategoryList)) {
       const categoryList = await Generator.fetchApi<CategoryList>(
         `${serverUrl}/api/plugin/export`,
@@ -294,9 +302,10 @@ export class Generator {
           type: 'json',
           status: 'all',
           isWiki: 'false',
-          token: token!,
+          pid: '24',
         },
       )
+      console.log(categoryList)
       this.projectIdToCategoryList[projectId] = categoryList
     }
 

@@ -225,6 +225,16 @@ export interface ServerConfig {
    */
   serverUrl: string,
   /**
+   * 项目id
+   *
+   * @example 'http://yapi.ywwl.org/project/24/interface/api' projectId 对应 24
+   */
+  projectId: string,
+  /** cookie _yapi_token */
+  _yapi_token: string,
+  /** cookie _yapi_uid */
+  _yapi_uid: string,
+  /**
    * 生产环境名称。
    *
    * **用于获取生产环境域名。**
@@ -241,108 +251,8 @@ export interface ServerConfig {
    *
    * @example 'src/api/index.ts'
    */
-  outputFilePath?: string,
-  /**
-   * 请求函数文件路径。
-   *
-   * @default 与 `outputFilePath` 同级目录下的 `request.ts` 文件
-   * @example 'src/api/request.ts'
-   */
-  requestFunctionFilePath?: string,
-  /**
-   * 预处理接口信息，返回新的接口信息。
-   *
-   * 譬如你想对接口的 `path` 进行某些处理，就可使用该方法。
-   *
-   * @example
-   *
-   * ```js
-   * interfaceInfo => {
-   *   interfaceInfo.path = interfaceInfo.path.replace('v1', 'v2')
-   *   return interfaceInfo
-   * }
-   * ```
-   */
-  preproccessInterface?: <T extends Interface>(interfaceInfo: T, changeCase: ChangeCase) => T,
-  /**
-   * 如果接口响应的结果是 `JSON` 对象，
-   * 且我们想要的数据在该对象下，
-   * 那我们就可将 `dataKey` 设为我们想要的数据对应的键。
-   *
-   * 比如该对象为 `{ code: 0, msg: '成功', data: 100 }`，
-   * 我们想要的数据为 `100`，
-   * 则我们可将 `dataKey` 设为 `data`。
-   *
-   * @example 'data'
-   */
-  dataKey?: string,
-  /**
-   * 项目列表。
-   */
-  projects: Array<
-    Pick<ServerConfig, 'prodEnvName' | 'outputFilePath' | 'requestFunctionFilePath' | 'preproccessInterface' | 'dataKey'> & {
-      /**
-       * 项目的唯一标识。
-       *
-       * 获取方式：打开项目 --> `设置` --> `token配置` --> 复制 token。
-       *
-       * @example 'e02a47122259d0c1973a9ff81cabb30685d64abc72f39edaa1ac6b6a792a647d'
-       */
-      token: string,
-      /**
-       * 分类列表。
-       */
-      categories: Array<
-        Pick<ServerConfig, 'prodEnvName' | 'outputFilePath' | 'requestFunctionFilePath' | 'preproccessInterface' | 'dataKey'> & {
-          /**
-           * 分类 ID，可以设置多个。
-           *
-           * 获取方式：打开项目 --> 点开分类 --> 复制浏览器地址栏 `/api/cat_` 后面的数字。
-           *
-           * @example 20
-           */
-          id: number | number[],
-          /**
-           * 获取请求函数的名称。
-           *
-           * @param interfaceInfo 接口信息
-           * @param changeCase 常用的大小写转换函数集合对象
-           * @returns 请求函数的名称
-           */
-          getRequestFunctionName(interfaceInfo: ExtendedInterface, changeCase: ChangeCase): string,
-          /**
-           * 获取请求数据类型的名称。
-           *
-           * @default changeCase.pascalCase(`${requestFunctionName}Request`)
-           * @param interfaceInfo 接口信息
-           * @param changeCase 常用的大小写转换函数集合对象
-           * @returns 请求数据类型的名称
-           */
-          getRequestDataTypeName?(interfaceInfo: ExtendedInterface, changeCase: ChangeCase): string,
-          /**
-           * 获取响应数据类型的名称。
-           *
-           * @default changeCase.pascalCase(`${requestFunctionName}Response`)
-           * @param interfaceInfo 接口信息
-           * @param changeCase 常用的大小写转换函数集合对象
-           * @returns 响应数据类型的名称
-           */
-          getResponseDataTypeName?(interfaceInfo: ExtendedInterface, changeCase: ChangeCase): string,
-        }
-      >,
-    }
-  >,
+  outputFilePath: string,
 }
-
-export type SyntheticalConfig = Partial<(
-  ServerConfig
-  & ServerConfig['projects'][0]
-  & ServerConfig['projects'][0]['categories'][0]
-  & {
-    mockUrl: string,
-    prodUrl: string,
-  }
-)>
 
 export type Config = ServerConfig | ServerConfig[]
 
@@ -405,3 +315,12 @@ export interface PropDefinition {
 
 /** 属性定义列表 */
 export type PropDefinitions = PropDefinition[]
+
+export interface ApiJsonItem {
+  index: number;
+  name: string;
+  desc?: string;
+  list: Interface[];
+}
+
+export type ApiJson = ApiJsonItem[]
