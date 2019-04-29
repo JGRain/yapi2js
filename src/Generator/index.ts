@@ -133,7 +133,7 @@ export class Generator {
       }
     }))
 
-    const arr: IOutPut[] = []
+    const arr: Types.IOutPut[] = []
     filesDesc.forEach(files => {
       files.list.forEach(file => {
         const reg = new RegExp( '/' , "g" )
@@ -159,11 +159,11 @@ export class Generator {
   }
 
 
-  write(outputs: IOutPut[]) {
+  write(outputs: Types.IOutPut[]) {
     // 生成api文件夹
     mkdirs(this.config.outputFilePath, () => {
       outputs.forEach(api => {
-        const data = this.generateItemFileCode(api)
+        const data = this.generateApiFileCode(api)
         writeFile(
           resolveApp(`${this.config.outputFilePath}/${api.name}.ts`),
           data
@@ -181,7 +181,10 @@ export class Generator {
   }
 
 
-  generateItemFileCode(api: IOutPut): string {
+  generateApiFileCode(api: Types.IOutPut): string {
+    if (this.config.generateApiFileCode) {
+      return this.config.generateApiFileCode(api)
+    }
     const data = [
       `
 /**
@@ -221,23 +224,4 @@ ${exportStr}
     `
   }
 
-}
-
-interface IOutPut {
-  /** 生成api 文件名称 */
-  name: string,
-  /** 接口url */
-  path: string,
-  method: Types.Method,
-  /** 接口名 */
-  title: string,
-  /** 接口备注 */
-  markdown: string,
-  /** 分类菜单id */
-  catid: number,
-  /** 接口ID */
-  id: number,
-  /**  */
-  requestInterface: string,
-  responseInterface: string,
 }

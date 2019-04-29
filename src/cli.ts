@@ -9,6 +9,37 @@ import prompt from 'prompts'
 import { Config, ServerConfig } from './types'
 import { Generator } from './Generator/index'
 
+const configTemplate = `
+export default {
+  serverUrl: 'http://yapi.ywwl.org',
+  outputFilePath: 'api',
+  projectId: '24',
+  _yapi_token: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1aWQiOjE4LCJpYXQiOjE1NTY1MDYyMTUsImV4cCI6MTU1NzExMTAxNX0.ADmz2HEE6hKoe1DP_U2QtyKSSEURLf5soGKRNyJkX_o',
+  _yapi_uid: '18',
+  generateApiFileCode: (api) => {
+    const arr = [
+      \`
+      /**
+      * \${api.title}
+      * \${api.markdown || ''}
+      **/
+      \`,
+      api.requestInterface,
+      api.responseInterface,
+      \`
+      export default (data: IReq) => request({
+        method: '\${api.method}',
+        url: '\${api.path}',
+        data: data
+      })
+      \`,
+    ]
+    return arr.join(\`
+    \`)
+  }
+}
+`
+
 TSNode.register({
   transpileOnly: true,
   compilerOptions: {
@@ -18,7 +49,7 @@ TSNode.register({
 
 ;(async () => {
   const pkg = require('../package.json')
-  const configFile = path.join(process.cwd(), 'ytt.config.ts')
+  const configFile = path.join(process.cwd(), 'ywApi2ts.config.ts')
 
   cli
     .version(pkg.version)
@@ -35,53 +66,8 @@ TSNode.register({
             })
             if (!answers.override) return
           }
-          await fs.outputFile(configFile, `${`
-            import { Config } from 'yapi-to-typescript'
-
-            const servers: Config = [
-              {
-                serverUrl: 'http://foo.bar',
-                prodEnvName: 'production',
-                outputFilePath: 'src/api/index.ts',
-                requestFunctionFilePath: 'src/api/request.ts',
-                projects: [
-                  {
-                    token: 'hello',
-                    categories: [
-                      {
-                        id: 50,
-                        preproccessInterface(interfaceInfo) {
-                          // interfaceInfo.path = interfaceInfo.path.replace('v1', 'v2')
-                          return interfaceInfo
-                        },
-                        getRequestFunctionName(interfaceInfo, changeCase) {
-                          return changeCase.camelCase(
-                            interfaceInfo.parsedPath.name,
-                          )
-                        },
-                        getRequestDataTypeName(interfaceInfo, changeCase) {
-                          return \`\${
-                            changeCase.pascalCase(
-                              interfaceInfo.parsedPath.name,
-                            )
-                          }Request\`
-                        },
-                        getResponseDataTypeName(interfaceInfo, changeCase) {
-                          return \`\${
-                            changeCase.pascalCase(
-                              interfaceInfo.parsedPath.name,
-                            )
-                          }Response\`
-                        },
-                      },
-                    ],
-                  },
-                ],
-              },
-            ]
-
-            export default servers
-          `.replace(/^ {12}/mg, '').trim()}\n`)
+          
+          await fs.outputFile(configFile, configTemplate)
           consola.success('写入配置文件完毕')
           break
         default:
