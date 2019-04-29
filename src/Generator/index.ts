@@ -5,6 +5,7 @@ import path from 'path'
 import request from 'request-promise-native'
 import { castArray, isEmpty, isFunction } from 'vtils'
 import { JSONSchema4 } from 'json-schema'
+import consola from 'consola'
 
 import * as Types from './../types'
 
@@ -13,6 +14,12 @@ import { getNormalizedRelativePath, jsonSchemaStringToJsonSchema, jsonSchemaToTy
 export class Generator {
 
   config: Types.ServerConfig
+
+  deletedFiles: string[] = []
+
+  modifiedFiles: string[] = []
+
+  addedFiles: string[] = []
 
   constructor(config: Types.ServerConfig) {
     this.config = config
@@ -167,17 +174,66 @@ export class Generator {
     })
     return arr
   }
+  /**
+   * 比对文件 确定文件状态
+   */
+  compareApiFile(files: string[], name: string, data: string) {
+    const matched = files.filter(file => file.replace('.ts', '') === name)
+    if (matched.length > 0) {
+      // 已存在该文件
+      const realPath = `${this.config.outputFilePath}/${name}.ts`
+      const oldData = fs.readFileSync(realPath).toString()
+      if (oldData !== data) {
+        this.modifiedFiles.push(`${name}.ts`)
+      }
+    } else {
+      // 不存在 新增
+      this.addedFiles.push(`${name}.ts`)
+    }
+  }
 
+  // 生成日志文件
+  writeLog({
+    modifiedFiles,
+    addedFiles,
+  }: {
+    modifiedFiles: string[],
+    addedFiles: string[],
+  }) {
+
+    if (modifiedFiles.length === 0 && addedFiles.length === 0) {
+      return consola.success('无接口文件更新')
+    }
+    const fileName = resolveApp(`${this.config.outputFilePath}/update.log`)
+    const data = `
+    ----------------------------------------------
+    更新时间： ${new Date()}
+    修改接口： ${modifiedFiles.join(',')}
+    新增接口： ${addedFiles.join(',')}
+    `
+    fs.writeFileSync(fileName, data, {
+      flag: 'a'
+    })
+  }
 
   write(outputs: Types.IOutPut[]) {
     // 生成api文件夹
     mkdirs(this.config.outputFilePath, () => {
-      outputs.forEach(api => {
+      const files = fs.readdirSync(resolveApp(this.config.outputFilePath))
+      outputs.forEach((api, i) => {
         const data = this.generateApiFileCode(api)
+        this.compareApiFile(files, api.name, data)
         writeFile(
           resolveApp(`${this.config.outputFilePath}/${api.name}.ts`),
           data
         )
+        if (i === outputs.length - 1) {
+          const {addedFiles, modifiedFiles} = this
+          this.writeLog({
+            addedFiles,
+            modifiedFiles,
+          })
+        }
       })
     })
     const AllApi: string[] = outputs.map(output => output.name)
