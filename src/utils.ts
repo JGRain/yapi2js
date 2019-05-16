@@ -185,29 +185,34 @@ const appDirectory = fs.realpathSync(process.cwd());
 export const resolveApp = (relativePath: string) => path.resolve(appDirectory, relativePath)
 
 export const mkdirs = (dirpath: string, callback: () => any) => {
-  fs.exists(dirpath, exists => {
-    if (exists) {
+  const exists = fs.existsSync(dirpath)
+  if (exists) {
+    callback()
+  } else {
+    //尝试创建父目录，然后再创建当前目录
+    mkdirs(path.dirname(dirpath), () => {
+      fs.mkdirSync(dirpath)
       callback()
-    } else {
-      //尝试创建父目录，然后再创建当前目录
-      mkdirs(path.dirname(dirpath), () => {
-        fs.mkdir(dirpath, callback)
-      })
-    }
-  })
+    })
+  }
 }
 
 
-export const writeFile = (dirpath: string, data: string, callback?: () => void) => {
-  fs.writeFile(dirpath, data, function(err) {
-    if (err) {
-      return consola.error(`文件写入失败: ${dirpath}`)
-    } else {
-      if (callback) {
-        return callback()
+export const writeFile: (dirpath: string, data: string) => Promise<any> = (dirpath: string, data: string) => {
+  return new Promise((resolve, reject) => {
+    fs.writeFile(dirpath, data, function(err) {
+      if (err) {
+        consola.error(`文件写入失败: ${dirpath}`)
+        return reject(dirpath)
       } else {
-        return consola.success(`文件写入成功: ${dirpath}`)
+        consola.success(`文件写入成功: ${dirpath}`)
+        return resolve(dirpath)
       }
-    }
+    })
   })
+}
+
+export const writeFileSync = (dirpath: string, data: string) => {
+  fs.writeFileSync(dirpath, data)
+  consola.success(`文件写入成功: ${dirpath}`)
 }

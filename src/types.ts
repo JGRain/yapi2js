@@ -219,6 +219,12 @@ export type CategoryList = Category[]
  */
 export interface ServerConfig {
   /**
+   * 构建ts 、js版本
+   *
+   * @example 'ts'
+   */
+  target: 'ts' | 'js',
+  /**
    * YApi 服务地址。
    *
    * @example 'http://yapi.foo.bar'
@@ -349,4 +355,15 @@ export interface IOutPut {
   resInterfaceName: string,
   requestInterface: string,
   responseInterface: string,
+}
+
+export interface IFiles {
+  [propName: string]: string
+}
+
+export interface IUpdateJsonItem {
+  time: Date,
+  modifiedFiles: IFiles,
+  addedFiles: IFiles,
+  deletedFiles: IFiles,
 }

@@ -6,20 +6,32 @@ import request from 'request-promise-native'
 import { castArray, isEmpty, isFunction } from 'vtils'
 import { JSONSchema4 } from 'json-schema'
 import consola from 'consola'
+import gitDiff from 'git-diff'
+import _ from 'lodash'
 
 import * as Types from './../types'
 
-import { getNormalizedRelativePath, jsonSchemaStringToJsonSchema, jsonSchemaToType, jsonToJsonSchema, mockjsTemplateToJsonSchema, propDefinitionsToJsonSchema, throwError, resolveApp, writeFile, mkdirs } from './../utils'
+import { getNormalizedRelativePath, jsonSchemaStringToJsonSchema, jsonSchemaToType, jsonToJsonSchema, mockjsTemplateToJsonSchema, propDefinitionsToJsonSchema, throwError, resolveApp, writeFile, mkdirs, writeFileSync } from './../utils'
+
 
 export class Generator {
 
   config: Types.ServerConfig
 
-  deletedFiles: string[] = []
+  deletedFiles: Types.IFiles = {}
 
-  modifiedFiles: string[] = []
+  modifiedFiles: Types.IFiles = {}
 
-  addedFiles: string[] = []
+  addedFiles: Types.IFiles = {}
+
+  unModifiedFiles: string[] = []
+
+  readonly ignoreFiles: string[] = [
+    'update.log',
+    'update.json',
+    'index.ts',
+    'index.js'
+  ]
 
   constructor(config: Types.ServerConfig) {
     this.config = config
@@ -127,12 +139,16 @@ export class Generator {
         })
         const reqInterfaceName = `IReq${name}`
         const resInterfaceName = `IRes${name}`
-        const requestInterface = await this.generateRequestDataType(apiItem, reqInterfaceName)
-        const responseInterface = await this.generateResponseDataType({
+        let requestInterface = await this.generateRequestDataType(apiItem, reqInterfaceName)
+        let responseInterface = await this.generateResponseDataType({
           interfaceInfo: apiItem,
           typeName: resInterfaceName,
           dataKey: this.config.projectId,
         })
+
+        requestInterface = requestInterface.replace('export interface', 'export class')
+        responseInterface = responseInterface.replace('export interface', 'export class')
+
         return {
           reqInterfaceName,
           requestInterface,
@@ -178,71 +194,138 @@ export class Generator {
    * 比对文件 确定文件状态
    */
   compareApiFile(files: string[], name: string, data: string) {
-    const matched = files.filter(file => file.replace('.ts', '') === name)
+    const matched = files.filter(file => file.replace(`.${this.config.target}`, '') === name)
     if (matched.length > 0) {
       // 已存在该文件
-      const realPath = `${this.config.outputFilePath}/${name}.ts`
+      const realPath = `${this.config.outputFilePath}/${name}.${this.config.target}`
       const oldData = fs.readFileSync(realPath).toString()
       if (oldData !== data) {
-        this.modifiedFiles.push(`${name}.ts`)
+        // 修改已存在文件
+        const diffResult = this.getfileDiff(oldData, data)
+        if (<string>diffResult) {
+          this.modifiedFiles[name] = diffResult
+        }
+        // this.modifiedFiles.push(`${name}.${this.config.target}`)
+        writeFileSync(
+          resolveApp(`${this.config.outputFilePath}/${name}.${this.config.target}`),
+          data
+        )
+      } else {
+        // this.unModifiedFiles.push(`${name}.${this.config.target}`)
       }
     } else {
       // 不存在 新增
-      this.addedFiles.push(`${name}.ts`)
+      const diffResult = this.getfileDiff('', data)
+      this.addedFiles[name] = diffResult
+      writeFileSync(
+        resolveApp(`${this.config.outputFilePath}/${name}.${this.config.target}`),
+        data
+      )
+      // this.addedFiles.push(`${name}.${this.config.target}`)
     }
+  }
+
+  // 文件新旧内容 diff
+  getfileDiff(oldStr: string, str: string): string {
+    return gitDiff(oldStr, str, {
+      color: false,
+      save: true,
+      wordDiff: false,
+    })
+  }
+
+  getDeletedFiles(files: string[], outputs: string[]) {
+    // files里存在 outputs不存在 则为即将删除的文件
+    files.forEach(file => {
+      if (outputs.indexOf(file) === -1 && this.ignoreFiles.indexOf(file) === -1) {
+        // this.deletedFiles.push(file)
+        // const diffResult = this.getfileDiff('', data)
+        // 删除的文件不需要文件内容的记录
+        this.deletedFiles[file] = ''
+        fs.unlinkSync(resolveApp(`${this.config.outputFilePath}/${file}`))
+      }
+    })
+  }
+  // 深度比较 不包含 time字段
+  deepCompareWithoutTime(data: object, nextData: object): any {
+    function changes(data: any, nextData: any) {
+      return _.transform(data, function(result, value, key) {
+        if (!_.isEqual(value, nextData[key])) {
+          result[key] = (_.isObject(value) && _.isObject(nextData[key])) ? changes(value, nextData[key]) : value
+        }
+      })
+    }
+    return changes(data, nextData)
   }
 
   // 生成日志文件
-  writeLog({
-    modifiedFiles,
-    addedFiles,
-  }: {
-    modifiedFiles: string[],
-    addedFiles: string[],
-  }) {
-
-    if (modifiedFiles.length === 0 && addedFiles.length === 0) {
-      return consola.success('无接口文件更新')
+  writeLog() {
+    const {deletedFiles, modifiedFiles, addedFiles} = this
+    const fileName = resolveApp(`${this.config.outputFilePath}/update.json`)
+    const apiUpdateItemJson: Types.IUpdateJsonItem = {
+      time: new Date(),
+      modifiedFiles,
+      addedFiles,
+      deletedFiles,
     }
-    const fileName = resolveApp(`${this.config.outputFilePath}/update.log`)
-    const data = `
-    ----------------------------------------------
-    更新时间： ${new Date()}
-    修改接口： ${modifiedFiles.join(',')}
-    新增接口： ${addedFiles.join(',')}
-    `
-    fs.writeFileSync(fileName, data, {
-      flag: 'a'
-    })
+
+    const isExists = fs.existsSync(fileName)
+    let data: Types.IUpdateJsonItem[] = []
+    if (isExists) {
+      data = JSON.parse(fs.readFileSync(fileName).toString())
+      data.push(apiUpdateItemJson)
+      // 深度比较 去重
+      for (let i = 0; i < data.length; i++) {
+        // 与下一个比较
+        if (i < data.length - 1) {
+          const result = this.deepCompareWithoutTime(data[i], data[i+1])
+          // diff 比对只有time字段出现差异 视为两个相同的更新
+          // 删除本项
+          if (Object.keys(result).length === 1 && result.time) {
+            console.log(result)
+            data.splice(i, 1)
+            i--
+          }
+        }
+      }
+    } else {
+      // 第一次生成文件 写入数组格式
+      data = [apiUpdateItemJson]
+    }
+    fs.writeFileSync(fileName, JSON.stringify(data))
   }
 
-  write(outputs: Types.IOutPut[]) {
+  write(outputs: Types.IOutPut[], callback?: (isNew: boolean) => void) {
     // 生成api文件夹
     mkdirs(this.config.outputFilePath, () => {
       const files = fs.readdirSync(resolveApp(this.config.outputFilePath))
+      // files里存在 outputs不存在 则为即将删除的文件
+      this.getDeletedFiles(files, outputs.map(output => `${output.name}.${this.config.target}`))
       outputs.forEach((api, i) => {
         const data = this.generateApiFileCode(api)
         this.compareApiFile(files, api.name, data)
-        writeFile(
-          resolveApp(`${this.config.outputFilePath}/${api.name}.ts`),
-          data
-        )
+
         if (i === outputs.length - 1) {
-          const {addedFiles, modifiedFiles} = this
-          this.writeLog({
-            addedFiles,
-            modifiedFiles,
+          const {deletedFiles, modifiedFiles, addedFiles} = this
+          const deleteds = Object.keys(deletedFiles)
+          const modifieds = Object.keys(modifiedFiles)
+          const addeds = Object.keys(addedFiles)
+          if (modifieds.length === 0 && addeds.length === 0 && deleteds.length === 0) {
+            consola.success('无接口文件更新')
+            return callback && callback(false)
+          }
+          const AllApi: string[] = outputs.map(output => output.name)
+          const indexData = this.generateIndexCode(AllApi)
+          mkdirs(this.config.outputFilePath, () => {
+            writeFileSync(
+              resolveApp(`${this.config.outputFilePath}/index.${this.config.target}`),
+              indexData
+            )
           })
+          this.writeLog()
+          return callback && callback(true)
         }
       })
-    })
-    const AllApi: string[] = outputs.map(output => output.name)
-    const indexData = this.generateIndexCode(AllApi)
-    mkdirs(this.config.outputFilePath, () => {
-      writeFile(
-        resolveApp(`${this.config.outputFilePath}/index.ts`),
-        indexData
-      )
     })
   }
 
