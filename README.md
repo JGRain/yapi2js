@@ -72,6 +72,21 @@ ynpm i @yowant/yfeapi2ts -g
    */
   outputFilePath: string,
   /**
+   * 菜单配置
+   * include 只包含的 catid
+   * exclude 忽略的 catid
+   * include exclude 是互斥的 只配置其中之一 也可以都不配置（*）
+   */
+  catid?: {
+    exclude?: string[],
+    include?: string[],
+  },
+  /**
+   * @param  {string} path url
+   * @param  {string} id 接口唯一id
+   */
+  generateApiName: (path: string, id: string) => string,
+  /**
    * 自定义代码片段函数
    * 不配置的话会有默认代码片段
    */
@@ -106,9 +121,7 @@ export interface IOutPut {
    * ts版本
   ```
 
-import { ServerConfig } from '@yowant/yfeapi2ts'
-
-const config: ServerConfig = {
+const config = {
   target: 'ts',
   serverUrl: 'http://yapi.ywwl.org',
   outputFilePath: 'src/api',
@@ -132,7 +145,7 @@ const config: ServerConfig = {
         url: '${api.path}',
         data: ${(() => {
           if (api.method.toLocaleLowerCase() === 'get') {
-            return '{params: data}'
+            return 'params: data'
           } else {
             return 'data'
           }
@@ -158,6 +171,9 @@ const config = {
   projectId: '48',
   _yapi_token: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1aWQiOjE4LCJpYXQiOjE1NTc5MDExNjksImV4cCI6MTU1ODUwNTk2OX0.LiVK-Et-Q_KdwbRxCn22M5FzRzlD7I6wsDvBnerDaFY',
   _yapi_uid: '18',
+  catid: {
+    exclude: ['37']
+  },
   generateApiFileCode: (api) => {
     const arr = [
       `
@@ -166,14 +182,14 @@ const config = {
       * ${api.markdown || ''}
       **/
       `,
-      "import request from '../utils/request'",
-      
-      `default default (data = {}) => request({
+      "import request from '@/utils/request.js'",
+
+      `export default (data = {}) => request({
         method: '${api.method}',
         url: '${api.path}',
-        data: ${(() => {
+        ${(() => {
           if (api.method.toLocaleLowerCase() === 'get') {
-            return '{params: data}'
+            return 'params: data,'
           } else {
             return 'data'
           }

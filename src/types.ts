@@ -240,16 +240,8 @@ export interface ServerConfig {
   _yapi_token: string,
   /** cookie _yapi_uid */
   _yapi_uid: string,
-  /**
-   * 生产环境名称。
-   *
-   * **用于获取生产环境域名。**
-   *
-   * 获取方式：打开项目 --> `设置` --> `环境配置` --> 点开或新增生产环境 --> 复制生产环境名称。
-   *
-   * @example 'prod'
-   */
-  prodEnvName?: string,
+  /** api.d.ts 全局声明的命名空间 会包含所有的接口interface 默认值 YapiTypes */
+  apiInterfaceNamespace?: string,
   /**
    * 输出文件路径。
    *
@@ -258,6 +250,23 @@ export interface ServerConfig {
    * @example 'src/api/index.ts'
    */
   outputFilePath: string,
+  /**
+   * 菜单配置
+   * include 只包含的 catid
+   * exclude 忽略的 catid
+   * include exclude 只配置其中之一 也可以都不配置（*）
+   */
+  catid?: {
+    exclude?: string[],
+    include?: string[],
+  },
+  /**
+   * 文件名称生成规则
+   * @param  {string} path 接口路径 url
+   * @param  {string} _id 接口id
+   * @param  {string} projectId 项目id
+   */
+  generateApiName?: (path: string, _id: string | number) => string,
   /**
    * 自定义代码片段函数
    * 不配置的话会有默认代码片段
@@ -350,7 +359,6 @@ export interface IOutPut {
   catid: number,
   /** 接口ID */
   id: number,
-  /**  */
   reqInterfaceName: string,
   resInterfaceName: string,
   requestInterface: string,

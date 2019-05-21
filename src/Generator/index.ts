@@ -295,8 +295,20 @@ export class Generator {
     fs.writeFileSync(fileName, JSON.stringify(data))
   }
 
-  write(outputs: Types.IOutPut[], callback?: (isNew: boolean) => void) {
+  write(outputsBase: Types.IOutPut[], callback?: (isNew: boolean) => void) {
     // 生成api文件夹
+    // catid 过滤
+    const outputs = outputsBase.filter(ele => {
+      if (this.config.catid && this.config.catid.exclude) {
+        // 不期望的 catid 分类
+        return this.config.catid.exclude.indexOf(String(ele.catid)) === -1
+      } else if (this.config.catid && this.config.catid.include) {
+        // 只生成 catid 分类
+        return this.config.catid.include.indexOf(String(ele.catid)) > -1
+      } else {
+        return true
+      }
+    })
     mkdirs(this.config.outputFilePath, () => {
       const files = fs.readdirSync(resolveApp(this.config.outputFilePath))
       // files里存在 outputs不存在 则为即将删除的文件
@@ -381,11 +393,15 @@ ${exportStr}
     path: string,
     _id: string | number
   }): string {
-    const reg = new RegExp( '/' , "g" )
-    let name = path.replace(reg, ' ').trim()
-    name = changeCase.pascalCase(name.trim())
-    name += _id
-    return name
+    if (this.config.generateApiName) {
+      return this.config.generateApiName(path, _id)
+    } else {
+      const reg = new RegExp( '/' , "g" )
+      let name = path.replace(reg, ' ').trim()
+      name = changeCase.pascalCase(name.trim())
+      name += _id
+      return name
+    }
   }
 
 }
