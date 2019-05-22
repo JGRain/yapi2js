@@ -212,4 +212,6 @@ export default config
 
  - 4、查看接口变动日志`yfeapi2ts changelog`
 
+ - 5、查看版本号 `yfeapi2ts version`
+
 ### feature
