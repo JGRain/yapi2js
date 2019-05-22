@@ -12,6 +12,8 @@ import open from 'open'
 import { Config, ServerConfig } from './types'
 import { Generator } from './Generator/index'
 
+const pkg = require('./../package.json')
+
 import {resolveApp} from './utils'
 
 import { configTemplate, viewHtmlTemplate } from './template'
@@ -59,13 +61,17 @@ TSNode.register({
             })
             if (!answers.override) return
           }
-          
+
           await fs.outputFile(configFile, configTemplate)
           consola.success('写入配置文件完毕')
           break
 
         case 'changelog':
           openChangelog(configFile)
+          break
+
+        case 'version':
+          console.log(`当前 yfeapi2ts版本号 ${pkg.version}`)
           break
 
         default:
