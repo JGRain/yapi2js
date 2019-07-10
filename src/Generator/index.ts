@@ -146,7 +146,13 @@ export class Generator {
           dataKey: this.config.projectId,
         })
 
+        // 输出class 便于使用类型
         requestInterface = requestInterface.replace('export interface', 'export class')
+        if (apiItem.method.toLocaleUpperCase() === 'GET') {
+          // get 类型 无法区分参数是number string
+          requestInterface = requestInterface.replace(/\sstring;/g, ' string | number;')
+        }
+        
         responseInterface = responseInterface.replace('export interface', 'export class')
 
         return {
