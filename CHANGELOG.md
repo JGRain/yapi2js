@@ -1,5 +1,9 @@
 # Change Log
 
+## v1.0.5
+### Changed
+- get方法 入参interface 类型为string | number
+
 ## v1.0.4
 ### Added
 - 查看版本号 `yfeapi2ts version`

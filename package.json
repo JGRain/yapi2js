@@ -1,6 +1,6 @@
 {
   "name": "@yowant/yfeapi2ts",
-  "version": "1.0.4",
+  "version": "1.0.5",
   "description": "yapi 输出到前端项目中api ts & js",
   "main": "client/index.js",
   "module": "client/index.mjs",
@@ -28,7 +28,7 @@
     "build": "yarn buildCli && yarn buildClient",
     "buildCli": "tsc",
     "buildClient": "bili",
-    "release": "yarn lint && yarn build && npm publish",
+    "release": "yarn build && npm publish",
     "view": "serve -p 9999 src/index.html"
   },
   "eslintConfig": {

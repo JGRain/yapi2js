@@ -6,7 +6,7 @@ const config = {
   serverUrl: 'http://yapi.ywwl.org',
   outputFilePath: 'api',
   projectId: '24',
-  _yapi_token: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1aWQiOjE4LCJpYXQiOjE1NTc5MDExNjksImV4cCI6MTU1ODUwNTk2OX0.LiVK-Et-Q_KdwbRxCn22M5FzRzlD7I6wsDvBnerDaFY',
+  _yapi_token: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1aWQiOjE4LCJpYXQiOjE1NjI1NjkyNDcsImV4cCI6MTU2MzE3NDA0N30.ULsmg9uLu17e8AI8GLA0NSUnUFP9_1gMDXvBKfNHpjI',
   _yapi_uid: '18',
   // catid: {
   //   exclude: ['37']
