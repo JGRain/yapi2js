@@ -63,6 +63,8 @@ ynpm i @yowant/yfeapi2ts -g
   _yapi_token: string,
   /** cookie _yapi_uid */
   _yapi_uid: string,
+  /**是否自动开启changelog视图, 默认false */
+  changelog?: boolean,
   /**
    * 输出文件路径。
    *
