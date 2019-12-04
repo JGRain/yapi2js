@@ -18,15 +18,14 @@ import {resolveApp} from './utils'
 
 import { configTemplate, viewHtmlTemplate } from './template'
 
-
-const openChangelog = (configFile: string) => {
+const openChangelog = (outputFilePath: string) => {
   // 打开变动视图
   const app = express()
-  const config: ServerConfig = require(configFile).default
-  let updateJson = fs.readFileSync(resolveApp(`${config.outputFilePath}/update.json`)).toString()
-  app.listen(34564, function(err: any) {
+  const updateJson = fs.readFileSync(resolveApp(`${outputFilePath}/update.json`)).toString()
+  const port = Math.ceil(Math.random() * 100000)
+  app.listen(port, function (err: any) {
     if (err) return
-    const uri = 'http://localhost:34564'
+    const uri = `http://localhost:${port}`
     console.log(`变更日志：${uri}`)
     open(uri)
     app.get('/', (req, res) => {
@@ -41,6 +40,20 @@ TSNode.register({
     module: 'commonjs',
   },
 })
+
+const generatoraFiles = async (config: ServerConfig) => {
+  const generator = new Generator(config)
+
+  const spinner = ora('正在获取yapi数据样本').start()
+  const output = await generator.generate()
+  spinner.stop()
+  consola.success('yapi数据样本已获取，开始写入')
+  generator.write(output, function (isNew) {
+    if (isNew && config.changelog) {
+      openChangelog(config.outputFilePath)
+    }
+  })
+}
 
 ;(async () => {
   const pkg = require('../package.json')
@@ -67,7 +80,14 @@ TSNode.register({
           break
 
         case 'changelog':
-          openChangelog(configFile)
+          const config: Config = require(configFile).default
+          if (Object.prototype.toString.call(config) === '[object Array]') {
+            config.forEach(configItem => {
+              openChangelog(configItem.outputFilePath)
+            })
+          } else {
+            openChangelog(config.outputFilePath)
+          }
           break
 
         case 'version':
@@ -80,18 +100,14 @@ TSNode.register({
           }
           consola.success(`找到配置文件: ${configFile}`)
           try {
-            const config: ServerConfig = require(configFile).default
-            const generator = new Generator(config)
-
-            const spinner = ora('正在获取yapi数据样本').start()
-            const output = await generator.generate()
-            spinner.stop()
-            consola.success('yapi数据样本已获取，开始写入')
-            generator.write(output, function(isNew) {
-              if (isNew && config.changelog) {
-                openChangelog(configFile)
-              }
-            })
+            const config: Config = require(configFile).default
+            if (Object.prototype.toString.call(config) === '[object Array]') {
+              config.forEach(configItem => {
+                generatoraFiles(configItem)
+              })
+            } else {
+              generatoraFiles(config as ServerConfig)
+            }
           } catch (err) {
             return consola.error(err)
           }

@@ -1,5 +1,9 @@
 # Change Log
 
+## v1.0.7
+### Changed
+- 支持多项目接口生成支持
+
 ## v1.0.6
 ### Changed
 - 增加是否开启changelog选项, 不填则不开启

@@ -39,11 +39,13 @@ export class Generator {
 
   async fetchApi(projectConfig = this.config): Promise<Types.ApiJson> {
 
-    const {_yapi_token, _yapi_uid, projectId, serverUrl} = projectConfig
+    const {
+      _yapi_token, _yapi_uid, projectId, serverUrl,
+    } = projectConfig
     const url = `${serverUrl}/api/plugin/export?type=json&pid=${projectId}&status=all&isWiki=false`
 
     const headers = {
-      'Cookie': `_yapi_token=${_yapi_token};_yapi_uid=${_yapi_uid}`
+      Cookie: `_yapi_token=${_yapi_token};_yapi_uid=${_yapi_uid}`,
     }
 
     const res = await request.get(url, {
@@ -126,7 +128,6 @@ export class Generator {
 
     return jsonSchemaToType(jsonSchema, typeName)
   }
-
 
   async generate() {
     const res = await this.fetchApi()
