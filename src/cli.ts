@@ -22,7 +22,7 @@ const openChangelog = (outputFilePath: string) => {
   // 打开变动视图
   const app = express()
   const updateJson = fs.readFileSync(resolveApp(`${outputFilePath}/update.json`)).toString()
-  const port = Math.ceil(Math.random() * 100000)
+  const port = Math.ceil(Math.random() * 10000)
   app.listen(port, function (err: any) {
     if (err) return
     const uri = `http://localhost:${port}`
