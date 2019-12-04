@@ -88,7 +88,7 @@ TSNode.register({
             spinner.stop()
             consola.success('yapi数据样本已获取，开始写入')
             generator.write(output, function(isNew) {
-              if (isNew) {
+              if (isNew && config.changelog) {
                 openChangelog(configFile)
               }
             })

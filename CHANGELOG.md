@@ -1,5 +1,9 @@
 # Change Log
 
+## v1.0.6
+### Changed
+- 增加是否开启changelog选项, 不填则不开启
+
 ## v1.0.5
 ### Changed
 - get方法 入参interface 类型为string | number
