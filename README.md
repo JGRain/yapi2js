@@ -212,6 +212,8 @@ export default config
   `yfeapi2ts`
   运行该命令 会根据步骤2的配置文件，生产出api（outputFilePath）文件夹，该文件夹下`index.ts`作为所有接口的导出口，供项目中导入使用
 
+  * config 可以是数组形式(1.0.7之后版本支持)，生成多个project的yapi接口到你的项目，值得注意的是，每一个项目都应该是独有的`outputPath`，模板片段也不应该设置相同（访问不同域名）
+
  - 4、查看接口变动日志`yfeapi2ts changelog`
 
  - 5、查看版本号 `yfeapi2ts version`

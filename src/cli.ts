@@ -82,11 +82,13 @@ const generatoraFiles = async (config: ServerConfig) => {
         case 'changelog':
           const config: Config = require(configFile).default
           if (Object.prototype.toString.call(config) === '[object Array]') {
-            config.forEach(configItem => {
+            // eslint-disable-next-line @typescript-eslint/no-angle-bracket-type-assertion
+            (<ServerConfig[]>config).forEach(configItem => {
               openChangelog(configItem.outputFilePath)
             })
           } else {
-            openChangelog(config.outputFilePath)
+            // eslint-disable-next-line @typescript-eslint/no-angle-bracket-type-assertion
+            openChangelog((<ServerConfig>config).outputFilePath)
           }
           break
 
@@ -102,7 +104,8 @@ const generatoraFiles = async (config: ServerConfig) => {
           try {
             const config: Config = require(configFile).default
             if (Object.prototype.toString.call(config) === '[object Array]') {
-              config.forEach(configItem => {
+              // eslint-disable-next-line @typescript-eslint/no-angle-bracket-type-assertion
+              (<ServerConfig[]>config).forEach(configItem => {
                 generatoraFiles(configItem)
               })
             } else {
