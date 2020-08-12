@@ -1,5 +1,5 @@
 {
-  "name": "@yowant/yfeapi2ts",
+  "name": "@ywfe/yfeapi2ts",
   "version": "1.0.7",
   "description": "yapi 输出到前端项目中api ts & js",
   "main": "client/index.js",

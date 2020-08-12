@@ -1,45 +1,35 @@
-# yfeapi2ts
+# yfeApi2Ts
 
-##### 一个根据yapi文档自动生成前端api接口代码的工具，提升效率
+根据YApi文档自动生成前端API接口代码的工具，提升开发效率。
 
-### 解决痛点
-  * 后端基于yapi写出的mock 前端几乎人肉copy，加大工作量，特别在ts这种强类型项目中，需要手写所有接口的入参出参类型，耗时长
-  * 对接口规范要求高，因为代码是自动生成的，所以更要注意接口文档的严谨性
+## 解决痛点
 
+- 后端基于yapi写出的mock 前端几乎人肉copy，加大工作量，特别在ts这种强类型项目中，需要手写所有接口的入参出参类型，耗时长
+- 对接口规范要求高，因为代码是自动生成的，所以更要注意接口文档的严谨性
 
-## 安装遥望内网npm源
+## 安装
 
-以下提供2个途径安装
-1. 使用nrm(nrm使用方式 自行百度)
-```
-npm i nrm -g
-nrm add yw http://registry.npm.ywwl.org/
-
-nrm use yw
-
-npm i @yowant/yfeapi2ts -g
-
+```bash
+npm i -g @ywfe/yfeapi2ts
 ```
 
-2. 使用ynpm
+安装完成后,可以检查下环境中是否安装成功。
 
-```
-npm i ynpm -g
-
-ynpm i @yowant/yfeapi2ts -g
+```bash
+yfeapi2ts version
 ```
 
+## 使用
 
-安装完成后可以检查下环境中是否有 `yfeapi2ts`
+### 生成 ```yfeapi2ts.config.ts``` 配置文件
 
+```bash
+yfeapi2ts init
+```
 
-## 使用方法
+到当前开发的项目根目录（与package.json同级）运行该命令，如果当前目录已存在 ```yfeapi2ts.config.ts``` 则会提示是否覆盖，没有则会创建，具体配置说明:
 
- - 2、 生成 yfeapi2ts.config.ts 文件配置到项目
-
-  `yfeapi2ts init`
-  到当前开发的项目根目录（与package.json平级）运行该命令，如果当前目录已存在`yfeapi2ts.config.ts` 则会提示是否覆盖，没有则会创建，具体配置说明:
-  ```
+```javascript
   export interface ServerConfig {
    /**
    * 构建ts 、js版本
@@ -116,12 +106,13 @@ export interface IOutPut {
   requestInterface: string,
   responseInterface: string,
 }
+```
 
-  ```
+#### 示例
 
-  1.示例
-   * ts版本
-  ```
+- **TS版本***
+
+```typescript
 
 const config = {
   target: 'ts',
@@ -161,11 +152,11 @@ const config = {
 }
 
 export default config
-
-  ```
-
-  * js版本
 ```
+
+- **Js版本**
+
+```javascript
 const config = {
   target: 'js',
   serverUrl: 'http://yapi.ywwl.org',
@@ -206,16 +197,24 @@ const config = {
 export default config
 ```
 
-  一般来说 generateApiFileCode 方法需要自己实现一下，组装拼接出符合自己期望的 接口代码格式
+一般来说 ```generateApiFileCode``` 方法需要自己实现一下，组装符合自己期望的接口代码格式.
 
- - 3、生成代码
-  `yfeapi2ts`
-  运行该命令 会根据步骤2的配置文件，生产出api（outputFilePath）文件夹，该文件夹下`index.ts`作为所有接口的导出口，供项目中导入使用
+### 生成代码
 
-  * config 可以是数组形式(1.0.7之后版本支持)，生成多个project的yapi接口到你的项目，值得注意的是，每一个项目都应该是独有的`outputPath`，模板片段也不应该设置相同（访问不同域名）
+```bash
+yfeapi2ts
+```
 
- - 4、查看接口变动日志`yfeapi2ts changelog`
+运行该命令 会根据步骤2的配置文件，生产出api（outputFilePath）文件夹，该文件夹下`index.ts`作为所有接口的导出口，供项目中导入使用
 
- - 5、查看版本号 `yfeapi2ts version`
+### 查看接口变动日志
 
-### feature
+```bash
+yfeapi2ts changelog
+```
+
+### 查看版本号
+
+```bash
+yfeapi2ts version
+```
