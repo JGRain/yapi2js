@@ -340,7 +340,7 @@ export class Generator {
           const modifieds = Object.keys(modifiedFiles)
           const addeds = Object.keys(addedFiles)
           if (modifieds.length === 0 && addeds.length === 0 && deleteds.length === 0) {
-            consola.success('🌈无接口文件更新')
+            consola.success('🌈 无接口文件更新')
             return callback && callback(false)
           }
           const AllApi: string[] = outputs.map(output => output.name)

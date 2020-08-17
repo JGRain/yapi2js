@@ -94,7 +94,7 @@ const generatoraFiles = async (config: ServerConfig) => {
             }
 
             await fs.outputFile(configFile, (codeType === 'js') ? configTemplateJavaScript : configTemplateTypeScript)
-            consola.success('🌈配置文件写入成功')
+            consola.success('🌈 配置文件写入成功')
             break
 
           case 'changelog':
