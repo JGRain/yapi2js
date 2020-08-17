@@ -1,50 +1,89 @@
-export const configTemplate = `
-import { ServerConfig } from 'ywapi2ts'
+// TypeScript版本模板
+export const configTemplateTypeScript = `
+  import { ServerConfig } from '@ywfe/yfeapi2ts'
 
-const config: ServerConfig = {
-  target: 'ts',
-  serverUrl: 'http://yapi.ywwl.org',
-  outputFilePath: 'api',
-  projectId: '24',
-  _yapi_token: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1aWQiOjE4LCJpYXQiOjE1NTY1MDYyMTUsImV4cCI6MTU1NzExMTAxNX0.ADmz2HEE6hKoe1DP_U2QtyKSSEURLf5soGKRNyJkX_o',
-  _yapi_uid: '18',
-  generateApiFileCode: (api) => {
-    const arr = [
-      \`
-      /**
-      * \${api.title}
-      * \${api.markdown || ''}
-      **/
-      \`,
-      "import request from './../request'",
-      'type Serve<T, G> = (data?: T) => Promise<G>',
-      api.requestInterface,
-      api.responseInterface,
-      \`
-      export default (data?): Serve<
-        \${api.reqInterfaceName},
-        \${api.resInterfaceName}['data']
-      > => request({
-        method: '\${api.method}',
-        url: '\${api.path}',
-        data: \${(() => {
-          if (api.method.toLocaleLowerCase() === 'get') {
-            return '{params: data}'
-          } else {
-            return 'data'
-          }
-        })()}
-      })
-      \`,
-    ]
-    return arr.join(\`
-    \`)
-  }
+  const config: ServerConfig = {
+    target: 'ts',
+    serverUrl: 'http://yapi.ywfe.com',
+    outputFilePath: 'api',
+    projectId: '001',
+    _yapi_uid: '1',
+    _yapi_token: 'userToken',
+    generateApiFileCode: (api) => {
+      const arr = [
+\`
+/**
+* \${api.title}
+* \${api.markdown || ''}
+**/
+\`,
+  "import request from './../request'",
+  'type Serve<T, G> = (data?: T) => Promise<G>',
+  api.requestInterface,
+  api.responseInterface,
+\`
+export default (data?): Serve<
+  \${api.reqInterfaceName},
+  \${api.resInterfaceName}['data']
+> => request({
+  method: '\${api.method}',
+  url: '\${api.path}',
+  data: \${(() => {
+    if (api.method.toLocaleLowerCase() === 'get') {
+      return '{params: data}'
+    } else {
+      return 'data'
+    }
+  })()}
+})
+\`,
+]
+return arr.join(\`
+\`)
 }
+  }
 
-export default config
+  export default config
 `
+// JavaScript版本模板
+export const configTemplateJavaScript = `
+  const config = {
+    target: 'js',
+    serverUrl: 'http://yapi.ywfe.com',
+    outputFilePath: 'api',
+    projectId: '001',
+    _yapi_uid: '1',
+    _yapi_token: 'userToken',
+    generateApiFileCode: (api) => {
+      const arr = [
+\`
+/**
+* \${api.title}
+* \${api.markdown || ''}
+**/
+\`,
+"import request from '@/utils/request.js'",
+\`
+export default (data = {}) => request({
+  method: '\${api.method}',
+  url: '\${api.path}',
+  data: \${(() => {
+    if (api.method.toLocaleLowerCase() === 'get') {
+      return '{params: data}'
+    } else {
+      return 'data'
+    }
+  })()}
+})
+\`,
+]
+return arr.join(\`
+\`)
+    }
+  }
 
+  export default config
+`
 
 export const viewHtmlTemplate = (updateJson: string) => `
 

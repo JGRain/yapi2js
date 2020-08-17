@@ -233,7 +233,7 @@ export interface ServerConfig {
   /**
    * 项目id
    *
-   * @example 'http://yapi.ywwl.org/project/24/interface/api' projectId 对应 24
+   * @example 'http://yapi.ywfe.com/project/24/interface/api' projectId 对应 24
    */
   projectId: string,
   /** cookie _yapi_token */
@@ -286,7 +286,7 @@ export interface RequestConfig<
   ProdUrl extends string = string,
   Path extends string = string,
   DataKey extends string | undefined = undefined,
-> {
+  > {
   /** 接口 Mock 地址，结尾无 `/` */
   mockUrl: MockUrl,
   /** 接口生产环境地址，结尾无 `/` */
@@ -342,6 +342,8 @@ export interface ApiJsonItem {
   index: number;
   name: string;
   desc?: string;
+  errcode?: number;
+  errmsg?: string;
   list: Interface[];
 }
 

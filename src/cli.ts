@@ -3,6 +3,7 @@ import * as TSNode from 'ts-node'
 import cli from 'commander'
 import express from 'express'
 import consola from 'consola'
+import chalk from 'chalk'
 import fs from 'fs-extra'
 import gitDiff from 'git-diff'
 import ora from 'ora'
@@ -14,12 +15,13 @@ import { Generator } from './Generator/index'
 
 const pkg = require('./../package.json')
 
-import {resolveApp} from './utils'
+import { resolveApp } from './utils'
 
-import { configTemplate, viewHtmlTemplate } from './template'
+import { configTemplateTypeScript, configTemplateJavaScript, viewHtmlTemplate } from './template'
+import { type } from 'os'
 
+// 打开变动视图
 const openChangelog = (outputFilePath: string) => {
-  // 打开变动视图
   const app = express()
   const updateJson = fs.readFileSync(resolveApp(`${outputFilePath}/update.json`)).toString()
   const port = Math.ceil(Math.random() * 10000)
@@ -43,79 +45,95 @@ TSNode.register({
 
 const generatoraFiles = async (config: ServerConfig) => {
   const generator = new Generator(config)
-
-  const spinner = ora('正在获取yapi数据样本').start()
+  const spinner = ora().start(`${chalk.green('开始获取yApi接口文档数据...')}`)
   const output = await generator.generate()
   spinner.stop()
-  consola.success('yapi数据样本已获取，开始写入')
-  generator.write(output, function (isNew) {
-    if (isNew && config.changelog) {
-      openChangelog(config.outputFilePath)
-    }
-  })
+  if (output) {
+    consola.success(`${chalk.green('yApi接口文档数据成功。开始生成代码...')}`)
+    generator.write(output, function (isNew) {
+      if (isNew && config.changelog) {
+        openChangelog(config.outputFilePath)
+      }
+    })
+    consola.success(`${chalk.red('🌈 yApi文档生成代码成功! YFEApi2TS成功完成任务.')}`)
+  }
 }
 
-;(async () => {
-  const pkg = require('../package.json')
-  const configFile = path.join(process.cwd(), 'yfeapi2ts.config.ts')
+  ; (async () => {
+    const pkg = require('../package.json')
+    const configFile = path.join(process.cwd(), 'yfeapi2ts.config.ts')
+    const logoImg = `
+                     _____
+     __  ___      __/ ___/ __
+    / / / / | /| / / /___/ _ \\
+   / /_/ /| |/ |/ / ____/  __/
+   \\__, / |__/|__/ /    \\___//
+  /____/        /_/
+  `
+    const printLogo = () => {
+      console.log(chalk.green(logoImg))
+    }
 
-  cli
-    .version(pkg.version)
-    .arguments('[cmd]')
-    .action(async cmd => {
-      switch (cmd) {
-        case 'init':
-          if (await fs.pathExists(configFile)) {
-            consola.info(`检测到配置文件: ${configFile}`)
-            const answers = await prompt({
-              type: 'confirm',
-              name: 'override',
-              message: '是否覆盖已有配置文件?',
-            })
-            if (!answers.override) return
-          }
+    cli
+      .version(pkg.version)
+      .arguments('[cmd] [codeType]')
+      .action(async (cmd, codeType) => {
+        codeType = codeType === undefined ? 'ts' : codeType.toLocaleLowerCase()
+        printLogo()
+        switch (cmd) {
+          case 'init':
+            console.log(chalk.white(`生成代码类型: `) + `${chalk.green.bold((codeType === 'js' ? 'JavaScript' : 'TypeScript'))}`)
+            if (await fs.pathExists(configFile)) {
+              console.log(chalk.red.bold(`⚠️ 检测到配置文件已存在: `) + `${chalk.white(configFile)}`)
+              const answers = await prompt({
+                type: 'confirm',
+                name: 'override',
+                message: '是否覆盖已有配置?',
+              })
+              if (!answers.override) return
+            }
 
-          await fs.outputFile(configFile, configTemplate)
-          consola.success('写入配置文件完毕')
-          break
+            await fs.outputFile(configFile, (codeType === 'js') ? configTemplateJavaScript : configTemplateTypeScript)
+            consola.success('🌈配置文件写入成功')
+            break
 
-        case 'changelog':
-          const config: Config = require(configFile).default
-          if (Object.prototype.toString.call(config) === '[object Array]') {
-            // eslint-disable-next-line @typescript-eslint/no-angle-bracket-type-assertion
-            (<ServerConfig[]>config).forEach(configItem => {
-              openChangelog(configItem.outputFilePath)
-            })
-          } else {
-            // eslint-disable-next-line @typescript-eslint/no-angle-bracket-type-assertion
-            openChangelog((<ServerConfig>config).outputFilePath)
-          }
-          break
-
-        case 'version':
-          console.log(`当前 yfeapi2ts版本号 ${pkg.version}`)
-          break
-
-        default:
-          if (!await fs.pathExists(configFile)) {
-            return consola.error(`找不到配置文件: ${configFile}`)
-          }
-          consola.success(`找到配置文件: ${configFile}`)
-          try {
+          case 'changelog':
             const config: Config = require(configFile).default
             if (Object.prototype.toString.call(config) === '[object Array]') {
               // eslint-disable-next-line @typescript-eslint/no-angle-bracket-type-assertion
               (<ServerConfig[]>config).forEach(configItem => {
-                generatoraFiles(configItem)
+                openChangelog(configItem.outputFilePath)
               })
             } else {
-              generatoraFiles(config as ServerConfig)
+              // eslint-disable-next-line @typescript-eslint/no-angle-bracket-type-assertion
+              openChangelog((<ServerConfig>config).outputFilePath)
             }
-          } catch (err) {
-            return consola.error(err)
-          }
-          break
-      }
-    })
-    .parse(process.argv)
-})()
+            break
+
+          case 'version':
+            console.log(chalk.red.bold(`💖`) + chalk.green(` YFEApi2TS 当前版本: v${pkg.version}`))
+            break
+
+          default:
+            if (!await fs.pathExists(configFile)) {
+              return consola.error(`找不到配置文件: ${configFile}`)
+            }
+            consola.success(`找到配置文件: ${configFile}`)
+            try {
+              const config: Config = require(configFile).default
+              if (Object.prototype.toString.call(config) === '[object Array]') {
+                // eslint-disable-next-line @typescript-eslint/no-angle-bracket-type-assertion
+                (<ServerConfig[]>config).forEach(configItem => {
+                  generatoraFiles(configItem)
+                })
+              } else {
+                generatoraFiles(config as ServerConfig)
+              }
+            } catch (err) {
+              return consola.error(err)
+            }
+            break
+        }
+      })
+      .parse(process.argv)
+  })()

@@ -1,16 +1,21 @@
 {
   "name": "@ywfe/yfeapi2ts",
-  "version": "1.0.7",
-  "description": "yapi 输出到前端项目中api ts & js",
+  "version": "1.1.0",
+  "description": "根据yApi接口文档，生成接口请求代码。支持生成TS & JavaScript语法",
   "main": "client/index.js",
   "module": "client/index.mjs",
   "typing": "client/index.d.ts",
-  "author": "jindajian",
+  "author": {
+    "name": "YWFE",
+    "email": "ywfe@ywwl.com",
+    "url": "http://ywfe.com"
+  },
   "bin": {
     "yfeapi2ts": "lib/cli.js"
   },
   "license": "MIT",
   "keywords": [
+    "ywfe",
     "yfeapi2ts",
     "yapi",
     "typescript",
@@ -20,6 +25,10 @@
     "lib",
     "client"
   ],
+  "engines": {
+    "node": ">= 10.10.0",
+    "npm": ">= 6.0.0"
+  },
   "scripts": {
     "lint": "eslint --fix --ext .ts src/",
     "testApi": "ts-node --transpile-only src/cli.ts",
@@ -82,6 +91,7 @@
     "@types/open": "^6.1.0",
     "@types/opn": "^5.5.0",
     "anywhere": "^1.5.0",
+    "chalk": "^4.1.0",
     "change-case": "^3.0.2",
     "commander": "^2.19.0",
     "consola": "^2.3.0",

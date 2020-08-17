@@ -200,7 +200,7 @@ export const mkdirs = (dirpath: string, callback: () => any) => {
 
 export const writeFile: (dirpath: string, data: string) => Promise<any> = (dirpath: string, data: string) => {
   return new Promise((resolve, reject) => {
-    fs.writeFile(dirpath, data, function(err) {
+    fs.writeFile(dirpath, data, function (err) {
       if (err) {
         consola.error(`文件写入失败: ${dirpath}`)
         return reject(dirpath)

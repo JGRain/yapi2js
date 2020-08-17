@@ -7,12 +7,15 @@ import { castArray, isEmpty, isFunction } from 'vtils'
 import { JSONSchema4 } from 'json-schema'
 import consola from 'consola'
 import gitDiff from 'git-diff'
+import chalk from 'chalk'
 import _ from 'lodash'
 
 import * as Types from './../types'
 
 import { getNormalizedRelativePath, jsonSchemaStringToJsonSchema, jsonSchemaToType, jsonToJsonSchema, mockjsTemplateToJsonSchema, propDefinitionsToJsonSchema, throwError, resolveApp, writeFile, mkdirs, writeFileSync } from './../utils'
+import { Console } from 'console'
 
+// console.log(Types.ApiJson)
 
 export class Generator {
 
@@ -37,29 +40,26 @@ export class Generator {
     this.config = config
   }
 
-  async fetchApi(projectConfig = this.config): Promise<Types.ApiJson> {
-
+  async fetchApi(projectConfig = this.config): Promise<any> {
     const {
       _yapi_token, _yapi_uid, projectId, serverUrl,
     } = projectConfig
     const url = `${serverUrl}/api/plugin/export?type=json&pid=${projectId}&status=all&isWiki=false`
-
     const headers = {
       Cookie: `_yapi_token=${_yapi_token};_yapi_uid=${_yapi_uid}`,
     }
-
     const res = await request.get(url, {
       json: true,
       headers: headers,
     })
     return res
-
   }
 
   /** 生成请求数据类型 */
   async generateRequestDataType(interfaceInfo: Types.Interface, typeName: string): Promise<string> {
     let jsonSchema: JSONSchema4 = {}
-    switch(interfaceInfo.method) {
+
+    switch (interfaceInfo.method) {
       case Types.Method.GET:
       case Types.Method.HEAD:
       case Types.Method.OPTIONS:
@@ -74,7 +74,7 @@ export class Generator {
         break
 
       default:
-        switch(interfaceInfo.req_body_type) {
+        switch (interfaceInfo.req_body_type) {
           case Types.RequestBodyType.form:
             jsonSchema = propDefinitionsToJsonSchema(
               interfaceInfo.req_body_form.map<Types.PropDefinition>(item => ({
@@ -131,71 +131,81 @@ export class Generator {
 
   async generate() {
     const res = await this.fetchApi()
-    const filesDesc = await Promise.all(res.map(async catItem => {
-      const {list, ...rest} = catItem
-      const newList = await Promise.all(list.map(async (apiItem) => {
-        const name = this.generateApiName({
-          path: apiItem.path,
-          _id: apiItem._id,
-        })
-        const reqInterfaceName = `IReq${name}`
-        const resInterfaceName = `IRes${name}`
-        let requestInterface = await this.generateRequestDataType(apiItem, reqInterfaceName)
-        let responseInterface = await this.generateResponseDataType({
-          interfaceInfo: apiItem,
-          typeName: resInterfaceName,
-          dataKey: this.config.projectId,
-        })
 
-        // 输出class 便于使用类型
-        requestInterface = requestInterface.replace('export interface', 'export class')
-        if (apiItem.method.toLocaleUpperCase() === 'GET') {
-          // get 类型 无法区分参数是number string
-          requestInterface = requestInterface.replace(/\sstring;/g, ' string | number;')
-        }
-        
-        responseInterface = responseInterface.replace('export interface', 'export class')
+    if (res.data === null) {
+      console.log(`${chalk.red.bold('\r\n✖️ 接口文档数据获取失败')}`)
+      console.log(`${chalk.yellow(`错误原因：${res.errmsg}\r\n请检查配置文件中yApi相关配置：(serverUrl | projectId | _yapi_uid | _yapi_token)`)}`)
+      return false
+    } else {
+      const filesDesc = await Promise.all(res.map(async (catItem: { [x: string]: any; list: any }) => {
+        const { list, ...rest } = catItem
+        const newList = await Promise.all(list.map(async (apiItem: Types.Interface) => {
+          const name = this.generateApiName({
+            path: apiItem.path,
+            _id: apiItem._id,
+          })
+          const reqInterfaceName = `IReq${name}`
+          const resInterfaceName = `IRes${name}`
+          let requestInterface = await this.generateRequestDataType(apiItem, reqInterfaceName)
+          let responseInterface = await this.generateResponseDataType({
+            interfaceInfo: apiItem,
+            typeName: resInterfaceName,
+            dataKey: this.config.projectId,
+          })
 
+          // 输出class 便于使用类型
+          requestInterface = requestInterface.replace('export interface', 'export class')
+          if (apiItem.method.toLocaleUpperCase() === 'GET') {
+            // get 类型 无法区分参数是number string
+            requestInterface = requestInterface.replace(/\sstring;/g, ' string | number;')
+          }
+
+          responseInterface = responseInterface.replace('export interface', 'export class')
+
+          return {
+            reqInterfaceName,
+            requestInterface,
+            resInterfaceName,
+            responseInterface,
+            ...apiItem
+          }
+        }))
         return {
-          reqInterfaceName,
-          requestInterface,
-          resInterfaceName,
-          responseInterface,
-          ...apiItem
+          ...rest,
+          list: newList,
         }
       }))
-      return {
-        ...rest,
-        list: newList,
-      }
-    }))
 
-    const arr: Types.IOutPut[] = []
-    filesDesc.forEach(files => {
-      files.list.forEach(file => {
-        const { path, _id } = file
-        const name = this.generateApiName({
-          path,
-          _id
+      const arr: Types.IOutPut[] = []
+      if (filesDesc.length) {
+        filesDesc.forEach((files: any) => {
+          files.list.forEach((file: any) => {
+            const { path, _id } = file
+            const name = this.generateApiName({
+              path,
+              _id
+            })
+            // pascalCase
+            const item = {
+              id: file._id,
+              catid: file.catid,
+              path: file.path,
+              name,
+              method: file.method,
+              title: file.title,
+              markdown: file.markdown || '',
+              reqInterfaceName: file.reqInterfaceName,
+              resInterfaceName: file.resInterfaceName,
+              requestInterface: file.requestInterface,
+              responseInterface: file.responseInterface,
+            }
+            arr.push(item)
+          })
         })
-        // pascalCase
-        const item = {
-          id: file._id,
-          catid: file.catid,
-          path: file.path,
-          name,
-          method: file.method,
-          title: file.title,
-          markdown: file.markdown || '',
-          reqInterfaceName: file.reqInterfaceName,
-          resInterfaceName: file.resInterfaceName,
-          requestInterface: file.requestInterface,
-          responseInterface: file.responseInterface,
-        }
-        arr.push(item)
-      })
-    })
-    return arr
+      }
+
+      return arr
+    }
   }
   /**
    * 比对文件 确定文件状态
@@ -256,7 +266,7 @@ export class Generator {
   // 深度比较 不包含 time字段
   deepCompareWithoutTime(data: object, nextData: object): any {
     function changes(data: any, nextData: any) {
-      return _.transform(data, function(result, value, key) {
+      return _.transform(data, function (result, value, key) {
         if (!_.isEqual(value, nextData[key])) {
           result[key] = (_.isObject(value) && _.isObject(nextData[key])) ? changes(value, nextData[key]) : value
         }
@@ -267,7 +277,7 @@ export class Generator {
 
   // 生成日志文件
   writeLog() {
-    const {deletedFiles, modifiedFiles, addedFiles} = this
+    const { deletedFiles, modifiedFiles, addedFiles } = this
     const fileName = resolveApp(`${this.config.outputFilePath}/update.json`)
     const apiUpdateItemJson: Types.IUpdateJsonItem = {
       time: new Date(),
@@ -285,7 +295,7 @@ export class Generator {
       for (let i = 0; i < data.length; i++) {
         // 与下一个比较
         if (i < data.length - 1) {
-          const result = this.deepCompareWithoutTime(data[i], data[i+1])
+          const result = this.deepCompareWithoutTime(data[i], data[i + 1])
           // diff 比对只有time字段出现差异 视为两个相同的更新
           // 删除本项
           if (Object.keys(result).length === 1 && result.time) {
@@ -325,12 +335,12 @@ export class Generator {
         this.compareApiFile(files, api.name, data)
 
         if (i === outputs.length - 1) {
-          const {deletedFiles, modifiedFiles, addedFiles} = this
+          const { deletedFiles, modifiedFiles, addedFiles } = this
           const deleteds = Object.keys(deletedFiles)
           const modifieds = Object.keys(modifiedFiles)
           const addeds = Object.keys(addedFiles)
           if (modifieds.length === 0 && addeds.length === 0 && deleteds.length === 0) {
-            consola.success('无接口文件更新')
+            consola.success('🌈无接口文件更新')
             return callback && callback(false)
           }
           const AllApi: string[] = outputs.map(output => output.name)
@@ -359,16 +369,16 @@ export class Generator {
 * ${api.title}
 * ${api.markdown || ''}
 **/
-      `,
+  `,
       api.requestInterface,
       api.responseInterface,
       `
-export default (data: IReq) => request({
-method: '${api.method}',
-url: '${api.path}',
-data: data
-})
-      `
+  export default (data: IReq) => request({
+  method: '${api.method}',
+  url: '${api.path}',
+  data: data
+  })
+`
     ]
     return data.join(`
     `)
@@ -403,7 +413,7 @@ ${exportStr}
     if (this.config.generateApiName) {
       return this.config.generateApiName(path, _id)
     } else {
-      const reg = new RegExp( '/' , "g" )
+      const reg = new RegExp('/', "g")
       let name = path.replace(reg, ' ').trim()
       name = changeCase.pascalCase(name.trim())
       name += _id
