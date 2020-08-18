@@ -28,7 +28,9 @@ yfeapi2ts version
 
 ## 使用
 
-### 生成 ```yfeapi2ts.config.ts``` 配置文件
+### 生成配置文件
+
+使用 ```yfeapi2ts init [ts|js]``` 生成 ```yfeapi2ts.config.ts``` 配置文件
 
 ```bash
 yfeapi2ts init [ts|js]
@@ -118,7 +120,6 @@ export interface IOutPut {
 - **TS版本***
 
 ```typescript
-
 const config = {
   target: 'ts',
   serverUrl: 'http://yapi.ywfe.com',
